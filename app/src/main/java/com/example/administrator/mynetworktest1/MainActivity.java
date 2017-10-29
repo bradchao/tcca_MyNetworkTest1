@@ -1,24 +1,92 @@
 package com.example.administrator.mynetworktest1;
 
+import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
+import android.os.Environment;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+
 public class MainActivity extends AppCompatActivity {
     private ConnectivityManager cmgr;
+    private MyNetworkStateReceiver receiver;
+
+    private WifiManager wmgr;
+
+    private File root;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    1);
+
+        }else{
+            init();
+        }
+
+
+
+
+    }
+
+    private void init(){
         cmgr = (ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);
 
+        receiver = new MyNetworkStateReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(receiver, filter);
+
+        root = Environment.getExternalStorageDirectory();
 
 
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            init();
+        }
+
+
+    }
+
+    @Override
+    public void finish() {
+        unregisterReceiver(receiver);
+        super.finish();
     }
 
     private boolean isConnectNetwork(){
@@ -29,7 +97,12 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean isConnectWifi(){
         NetworkInfo wifiInfo =  cmgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+
+
+
         return wifiInfo.isConnected();
+
     }
 
     public void test1(View view){
@@ -37,6 +110,50 @@ public class MainActivity extends AppCompatActivity {
         Log.i("brad", "Wifi:" + isConnectWifi());
     }
 
+    private class MyNetworkStateReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.i("brad", "state:" + isConnectNetwork());
+        }
+    }
 
+
+    public void test2(View view){
+        try {
+            File myfile = new File(root, "mydata.txt");
+            FileOutputStream fout = new FileOutputStream(myfile);
+            fout.write("Hello, World\nHello, Brad\n1234567\n7654321\n".getBytes());
+            fout.flush();
+            fout.close();
+            Log.i("brad", "File save OK");
+        }catch(Exception e){
+            Log.i("brad", e.toString());
+        }
+
+    }
+
+    public void test3(View view){
+        new Thread(){
+            @Override
+            public void run() {
+                try {
+                    File upload = new File(root, "mydata.txt");
+                    byte[] buf = new byte[(int)(upload.length())];
+                    FileInputStream fin = new FileInputStream(upload);
+                    fin.read(buf);
+                    fin.close();
+
+                    Socket socket = new Socket(InetAddress.getByName("10.0.2.2"), 7777);
+                    OutputStream out = socket.getOutputStream();
+                    out.write(buf);
+                    out.flush();
+                    out.close();
+                    Log.i("brad", "Send OK");
+                }catch(Exception ee) {
+                    Log.i("brad", "Send ERR:" + ee.toString());
+                }
+            }
+        }.start();
+    }
 
 }
