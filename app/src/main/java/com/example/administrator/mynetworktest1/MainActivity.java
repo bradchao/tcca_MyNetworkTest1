@@ -21,16 +21,20 @@ import android.view.View;
 import android.widget.EditText;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
     private ConnectivityManager cmgr;
@@ -215,6 +219,26 @@ public class MainActivity extends AppCompatActivity {
                     conn.setDoInput(true);
                     conn.setDoOutput(true);
 
+                    ContentValues data = new ContentValues();
+                    data.put("account", inputAccount);
+                    data.put("passwd", inputPasswd);
+                    String qs = queryString(data);
+
+                    OutputStream os = conn.getOutputStream();
+                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os));
+                    writer.write(qs);
+                    writer.flush();
+                    writer.close();
+
+                    conn.connect();
+
+                    int responseCode = conn.getResponseCode();
+                    String responseMesg = conn.getResponseMessage();
+
+                    BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(conn.getInputStream())) ;
+                    String ret = reader.readLine();
+                    Log.i("brad", responseCode + ":" + responseMesg + ":" + ret);
 
 
 
@@ -228,7 +252,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String queryString(ContentValues data){
-        return  "";
+        StringBuffer sb = new StringBuffer();
+        Set<String> keys = data.keySet();
+        try {
+            for (String key : keys) {
+                sb.append(URLEncoder.encode(key, "UTF-8"));
+                sb.append("=");
+                sb.append(URLEncoder.encode(data.getAsString(key), "UTF-8"));
+                sb.append("&");
+            }
+            sb.deleteCharAt(sb.length()-1);
+            return sb.toString();
+        }catch(Exception ee){
+            return null;
+        }
     }
 
 
