@@ -156,4 +156,17 @@ public class MainActivity extends AppCompatActivity {
         }.start();
     }
 
+    public void reg(View view){
+        new Thread(){
+            @Override
+            public void run() {
+                
+
+
+
+            }
+        }.start();
+    }
+
+
 }
