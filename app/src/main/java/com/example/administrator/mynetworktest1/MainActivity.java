@@ -2,6 +2,7 @@ package com.example.administrator.mynetworktest1;
 
 import android.Manifest;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -19,9 +20,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
@@ -180,7 +183,10 @@ public class MainActivity extends AppCompatActivity {
                     URL url = new URL(urlString);
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.connect();
-                    conn.getInputStream();
+                    BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(conn.getInputStream())) ;
+                    String ret = reader.readLine();
+                    Log.i("brad", ret);
                 } catch (Exception e) {
                     Log.i("brad", e.toString());
                 }
@@ -189,6 +195,42 @@ public class MainActivity extends AppCompatActivity {
             }
         }.start();
     }
+
+    // POST
+    public void login(View view){
+        new Thread(){
+            @Override
+            public void run() {
+                String inputAccount = account.getText().toString();
+                String inputPasswd = passwd.getText().toString();
+
+                String urlString = "http://10.0.1.8/check.php";
+
+                try {
+                    URL url = new URL(urlString);
+                    HttpURLConnection conn  = (HttpURLConnection) url.openConnection();
+                    conn.setReadTimeout(3000);
+                    conn.setConnectTimeout(3000);
+                    conn.setRequestMethod("POST");
+                    conn.setDoInput(true);
+                    conn.setDoOutput(true);
+
+
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+
+            }
+        }.start();
+    }
+
+    private String queryString(ContentValues data){
+        return  "";
+    }
+
 
 
 }
