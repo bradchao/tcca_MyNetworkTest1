@@ -61,12 +61,16 @@ public class MultipartUtility {
      * @param name field name
      * @param value field value
      */
-    public void addFormField(String name, String value) {
+    public void addFormField(String name, String value, boolean isLast) {
         writer.append("--" + boundary).append(LINE_FEED);
         writer.append("Content-Disposition: form-data; name=\"" + name + "\"").append(LINE_FEED);
         writer.append("Content-Type: text/plain; charset=" + charset).append(LINE_FEED);
         writer.append(LINE_FEED);
-        writer.append(value).append(LINE_FEED);
+        if (isLast){
+            writer.append(value);
+        }else {
+            writer.append(value).append(LINE_FEED);
+        }
         writer.flush();
     }
 

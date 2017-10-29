@@ -25,6 +25,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -34,6 +35,7 @@ import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.List;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
@@ -211,40 +213,51 @@ public class MainActivity extends AppCompatActivity {
                 String urlString = "http://10.0.1.8/check.php";
 
                 try {
-                    URL url = new URL(urlString);
-                    HttpURLConnection conn  = (HttpURLConnection) url.openConnection();
-                    conn.setReadTimeout(3000);
-                    conn.setConnectTimeout(3000);
-                    conn.setRequestMethod("POST");
-                    conn.setDoInput(true);
-                    conn.setDoOutput(true);
-
-                    ContentValues data = new ContentValues();
-                    data.put("account", inputAccount);
-                    data.put("passwd", inputPasswd);
-                    String qs = queryString(data);
-
-                    OutputStream os = conn.getOutputStream();
-                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os));
-                    writer.write(qs);
-                    writer.flush();
-                    writer.close();
-
-                    conn.connect();
-
-                    int responseCode = conn.getResponseCode();
-                    String responseMesg = conn.getResponseMessage();
-
-                    BufferedReader reader = new BufferedReader(
-                            new InputStreamReader(conn.getInputStream())) ;
-                    String ret = reader.readLine();
-                    Log.i("brad", responseCode + ":" + responseMesg + ":" + ret);
-
-
-
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    MultipartUtility mu = new MultipartUtility(urlString, "UTF-8");
+                    mu.addFormField("account", inputAccount, false);
+                    mu.addFormField("passwd", inputPasswd, true);
+                    List<String> ret = mu.finish();
+                    Log.i("brad", ret.get(0));
+                } catch (IOException e) {
+                    Log.i("brad", e.toString());
                 }
+
+
+//                try {
+//                    URL url = new URL(urlString);
+//                    HttpURLConnection conn  = (HttpURLConnection) url.openConnection();
+//                    conn.setReadTimeout(3000);
+//                    conn.setConnectTimeout(3000);
+//                    conn.setRequestMethod("POST");
+//                    conn.setDoInput(true);
+//                    conn.setDoOutput(true);
+//
+//                    ContentValues data = new ContentValues();
+//                    data.put("account", inputAccount);
+//                    data.put("passwd", inputPasswd);
+//                    String qs = queryString(data);
+//
+//                    OutputStream os = conn.getOutputStream();
+//                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os));
+//                    writer.write(qs);
+//                    writer.flush();
+//                    writer.close();
+//
+//                    conn.connect();
+//
+//                    int responseCode = conn.getResponseCode();
+//                    String responseMesg = conn.getResponseMessage();
+//
+//                    BufferedReader reader = new BufferedReader(
+//                            new InputStreamReader(conn.getInputStream())) ;
+//                    String ret = reader.readLine();
+//                    Log.i("brad", responseCode + ":" + responseMesg + ":" + ret);
+//
+//
+//
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
 
 
             }
@@ -266,6 +279,24 @@ public class MainActivity extends AppCompatActivity {
         }catch(Exception ee){
             return null;
         }
+    }
+
+    public void upload(View view){
+        new Thread(){
+            @Override
+            public void run() {
+                try {
+                    MultipartUtility mu =
+                            new MultipartUtility("http://10.0.1.8/doUpload.php","UTF-8");
+                    File upload = new File(root, "mydata.txt");
+                    mu.addFilePart("upload", upload);
+                    List<String> ret = mu.finish();
+                    Log.i("brad", ret.get(0));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
     }
 
 
