@@ -17,13 +17,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.Socket;
+import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
     private ConnectivityManager cmgr;
@@ -33,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
     private File root;
 
+    private EditText account, passwd, realname;
 
 
     @Override
@@ -67,6 +72,9 @@ public class MainActivity extends AppCompatActivity {
 
         root = Environment.getExternalStorageDirectory();
 
+        account = (EditText)findViewById(R.id.account);
+        passwd = (EditText)findViewById(R.id.passwd);
+        realname = (EditText)findViewById(R.id.realname);
 
     }
 
@@ -160,8 +168,22 @@ public class MainActivity extends AppCompatActivity {
         new Thread(){
             @Override
             public void run() {
-                
+                String inputAccount = account.getText().toString();
+                String inputPasswd = passwd.getText().toString();
+                String inputRealname = realname.getText().toString();
 
+                String urlString = "http://10.0.1.8/brad03.php?account=" +
+                        inputAccount + "&passwd=" + inputPasswd
+                        + "&realname=" + inputRealname;
+
+                try {
+                    URL url = new URL(urlString);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.connect();
+                    conn.getInputStream();
+                } catch (Exception e) {
+                    Log.i("brad", e.toString());
+                }
 
 
             }
